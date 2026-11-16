@@ -1,41 +1,17 @@
 #!/usr/bin/python3
-"""
-A Python script that, using a REST API for a given employee ID,
-returns information about his/her TODO list progress.
-"""
-
-import json
+"""Display an employee's TODO list progress using a REST API."""
+import requests
 import sys
-import urllib.request
 
 
 if _name_ == "_main_":
-    if len(sys.argv) > 1:
-        employee_id = sys.argv[1]
+    url = "https://jsonplaceholder.typicode.com/"
+    user_id = int(sys.argv[1])
+    user = requests.get(url + "users/{}".format(user_id)).json()
+    todos = requests.get(url + "todos", params={"userId": user_id}).json()
 
-        # Base URL for JSONPlaceholder API
-        base_url = "https://jsonplaceholder.typicode.com"
-
-        # Fetch user details
-        user_url = f"{base_url}/users/{employee_id}"
-        with urllib.request.urlopen(user_url) as response:
-            user_data = json.loads(response.read().decode())
-            employee_name = user_data.get("name")
-
-        # Fetch user todos
-        todos_url = f"{base_url}/todos?userId={employee_id}"
-        with urllib.request.urlopen(todos_url) as response:
-            todos_data = json.loads(response.read().decode())
-
-        total_tasks = len(todos_data)
-        completed_tasks = [task for task in todos_data if task.get("completed")]
-        number_of_done_tasks = len(completed_tasks)
-
-        # Display output in the exact requested format
-        print(
-            f"Employee {employee_name} is done with tasks"
-            f"({number_of_done_tasks}/{total_tasks}):"
-        )
-
-        for task in completed_tasks:
-            print(f"\t {task.get('title')}")
+    done = [task.get("title") for task in todos if task.get("completed")]
+    print("Employee {} is done with tasks({}/{}):".format(
+        user.get("name"), len(done), len(todos)))
+    for title in done:
+        print("\t {}".format(title))
